@@ -1,10 +1,10 @@
-import numpy            #Vektorenhandling Jahreszeitenerkennung
-import Adafruit_DHT     #DHT11 Sensor
-from time import *      #Durchlaufzeit messen
-import RPi.GPIO as GPIO #LED
-import lcddriver        #Display
+import numpy            #handling vectors, used for detecting the actual season
+import Adafruit_DHT     #DHT11 temperature sensor
+from time import *      #handling all time related stuff
+import RPi.GPIO as GPIO #access GPIO pins (control diodes and more)
+import lcddriver        #20x4 LCD
 
-########### Konstanten + Einstellungen ###########
+########### Constants + Settings ###########
 from aq_constants import *
 
 ########### initialize sensors ###########
@@ -12,16 +12,10 @@ DHT11sensor = Adafruit_DHT.DHT11
 DHTdatapin = 4
 humidity = 999 # in case not measured
 
-########### Variablen initialisieren ###########
-oldtime = 0
-new_s_cycletime = s_cycletime
-buffer_cycletime=numpy.zeros(buffer_size)
-counter_buffer = 0
-avg_cycletime = s_cycletime*1000
+########### initialize variables ###########
 mintemp=100
 maxtemp=0
 errors=0
-numpy.place(buffer_cycletime, buffer_cycletime==0, [s_cycletime*1000])
 
 ########### initialize GPIO for LED ###########
 GPIO.setmode(GPIO.BCM)
@@ -43,24 +37,24 @@ if usage_display == 1 :
             [0x00,0x00,0x0A,0x00,0x11,0x0E,0x00,0x00]
              ]
 
-########### Monate und Jahreszeiten verknüpfen ###########
-if (m_winter_start-1 == 0):      #Herbst ist immer der Monat vor Winter
-    m_herbst=12
+########### Assign months to seasons ###########
+if (m_winter_start-1 == 0):      #Autumn is always the 1 month before winter
+    m_autumn=12
 else:
-    m_herbst=m_winter_start-1
+    m_autumn=m_winter_start-1
     
-if (m_sommer_start-1 == 0):      #Frühling ist immer der Monat vor Sommer
+if (m_summer_start-1 == 0):      #Spring is always the 1 month before summer
     m_spring=12
 else:
-    m_spring=m_sommer_start-1
-m_sommer=numpy.arange(m_sommer_start, m_herbst)
+    m_spring=m_summer_start-1
+m_summer=numpy.arange(m_summer_start, m_autumn)
 m_winter=numpy.arange(m_winter_start, m_spring)
-t_springherbst=(t_sommer+t_winter)/2
+t_springautumn=(t_summer+t_winter)/2
 
-########### Funktionen ###########
+########### custom functions ###########
 class fko:
     def clock(h,m,s):
-        if h < 10 :
+        if h < 10 :      #need to print 0 manually to have all characters always in same place
             tenhour="0"
         else:
             tenhour=""
@@ -74,16 +68,15 @@ class fko:
             tensec=""
         lcd.lcd_display_string(tenhour+str(h)+":"+tenmin+str(m)+":"+tensec+str(s), 4)
     def heartbeat(sleeptime):
-        #switchtimefactor: 0.1=10% of cycle time diode is off
-        GPIO.output(18,GPIO.LOW) #LED off
+        GPIO.output(18,GPIO.LOW)           #LED off
         if usage_display == 1 :
-            lcd.lcd_display_string(" ", 1) # erase heart
+            lcd.lcd_display_string(" ", 1) #erase heart
         sleep(sleeptime*0.5)
-        GPIO.output(18,GPIO.HIGH) #LED on
+        GPIO.output(18,GPIO.HIGH)          #LED on
         if usage_display == 1 :
             lcd.lcd_write(0x80)
         if usage_display == 1 :
-            lcd.lcd_write_char(0) # print heart
+            lcd.lcd_write_char(0)          #print heart; printing at end means it will still longer than 50% of runtime because sensor is checked after this
         sleep(sleeptime*0.5)
     def sectime(h,m,pos):
         if h < 10 :
