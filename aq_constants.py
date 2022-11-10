@@ -2,6 +2,7 @@
 ####### Constants/Settings #######
 ##################################
 aq_debug=0          #debug flag for direct console output in python
+aq_version=2        #release version of aquarium.py
 ########### Hardware ###########
 usage_DHT11=0       #use blue DHT11 sensor
 usage_DS1820=1      #use steel water temp sensor
