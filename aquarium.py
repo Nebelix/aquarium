@@ -53,20 +53,9 @@ while True:
         lcd.lcd_display_string('T={0:0.1f}'.format(temperature) +chr(223)+"C", 3)
         
     ########### Temperature controller ###########
-    if season == 1 :
-        t_sp=(t_summer+t_winter)/2
-    elif season == 2 :
-        t_sp=t_summer
-    elif season == 3 :
-        t_sp=(t_summer+t_winter)/2
-    elif season == 4 :
-        t_sp=t_winter
-    else :
-        print("Error_UnknownSeason")
-    if aq_debug == 1 :
-        print("Set point temp =",t_sp,"°C")
+    heater_on = fko.tempcontrol(season,temperature,heater_on)
         
-    ########### Temporary storage ###########        
+    ########### Temporary storage ###########
     if temperature < mintemp or localtime().tm_hour == minmaxresettime and localtime().tm_min == 0 :
         mintemp = temperature
         fko.sectime(localtime().tm_hour,localtime().tm_min,9)
@@ -77,8 +66,15 @@ while True:
         print("Min/Max temperature =",mintemp,"/",maxtemp,"°C")
     if usage_display == 1 :
         lcd.lcd_display_string('  {0:0.1f}'.format(mintemp) +'  {0:0.1f}'.format(maxtemp), 3,8)
+    
+    ########### slow loop ###########
+    if cycleslow_counter >= cyclegain_slow :
+        ### place slow functions below ###
+        fko.connectcheck()
+        ### place slow functions above ###
+        cycleslow_counter=0
+    else:
+        cycleslow_counter=cycleslow_counter+1
 
     ########### Alife LED + sleep + displayheartbeat ###########
-    fko.heartbeat(s_cycletime)
-#     GPIO.output(23,GPIO.LOW) #relay off
-#     GPIO.output(23,GPIO.HIGH) #relay on
+    fko.heartbeat()

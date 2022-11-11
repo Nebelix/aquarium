@@ -3,6 +3,7 @@ import Adafruit_DHT     #DHT11 temperature sensor
 from time import *      #handling all time related stuff
 import RPi.GPIO as GPIO #access GPIO pins (control diodes and more)
 import lcddriver        #20x4 LCD
+import requests         #to check internet connection
 
 ########### Constants + Settings ###########
 from aq_constants import *
@@ -16,6 +17,8 @@ humidity = 999 # in case not measured
 mintemp=100
 maxtemp=0
 errors=0
+cycleslow_counter=0
+heater_on=-1        #unknown, to avoid stuck relay from last runtime
 
 ########### initialize GPIO for LED ###########
 GPIO.setmode(GPIO.BCM)
@@ -67,17 +70,17 @@ class fko:
         else:
             tensec=""
         lcd.lcd_display_string(tenhour+str(h)+":"+tenmin+str(m)+":"+tensec+str(s), 4)
-    def heartbeat(sleeptime):
+    def heartbeat():
         GPIO.output(18,GPIO.LOW)           #LED off
         if usage_display == 1 :
             lcd.lcd_display_string(" ", 1) #erase heart
-        sleep(sleeptime*0.5)
+        sleep(s_cycletime*0.5)
         GPIO.output(18,GPIO.HIGH)          #LED on
         if usage_display == 1 :
             lcd.lcd_write(0x80)
         if usage_display == 1 :
             lcd.lcd_write_char(0)          #print heart; printing at end means it will still longer than 50% of runtime because sensor is checked after this
-        sleep(sleeptime*0.5)
+        sleep(s_cycletime*0.5)
     def sectime(h,m,pos):
         if h < 10 :
             tenhour="0"
@@ -89,3 +92,41 @@ class fko:
             tenmin=""
         if usage_display == 1 :
             lcd.lcd_display_string(tenhour+str(h)+":"+tenmin+str(m),4,pos)
+    def connectcheck():
+        if usage_ccheck == 1 :
+            try:
+                requests.get(ccheck_host, timeout=ccheck_timeout)            
+            except:
+                if usage_display == 1 :
+                    lcd.lcd_display_string("o",1,1)
+            else:
+                if usage_display == 1 :
+                    lcd.lcd_display_string("i",1,1)
+    def tempcontrol(tc_season,tc_act,tc_heater_on):
+            if tc_season == 1 :
+                t_sp=(t_summer+t_winter)/2
+            elif tc_season == 2 :
+                t_sp=t_summer
+            elif tc_season == 3 :
+                t_sp=(t_summer+t_winter)/2
+            elif tc_season == 4 :
+                t_sp=t_winter
+            else :
+                print("Error_UnknownSeason")
+            if aq_debug == 1 :
+                print("Set point temp =",t_sp,"°C")
+            if tc_act < (t_sp-t_hysteresis) and tc_heater_on == 0 :
+                GPIO.output(23,GPIO.HIGH) #relay on
+                if usage_display == 1 :
+                    lcd.lcd_display_string("H",1,3)
+                if aq_debug == 1 :
+                    print("Heater relay switched on")
+                return True
+            elif (tc_act >= t_sp) and tc_heater_on == 1 or tc_heater_on == -1 : #-1 is initial situation
+                GPIO.output(23,GPIO.LOW) #relay off
+                if usage_display == 1 :
+                    lcd.lcd_display_string("h",1,3)
+                if aq_debug == 1 :
+                    print("Heater relay switched off")
+                return False
+                
