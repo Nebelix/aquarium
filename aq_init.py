@@ -69,7 +69,8 @@ class fko:
             tensec="0"
         else:
             tensec=""
-        lcd.lcd_display_string(tenhour+str(h)+":"+tenmin+str(m)+":"+tensec+str(s), 4)
+        if usage_display == 1 :
+            lcd.lcd_display_string(tenhour+str(h)+":"+tenmin+str(m)+":"+tensec+str(s), 4)
     def heartbeat():
         GPIO.output(18,GPIO.LOW)           #LED off
         if usage_display == 1 :

@@ -7,8 +7,7 @@ while True:
     if aq_debug == 1 :
         print("___________")
     ########### Timer ###########
-    if usage_display == 1 :    #show timestamp on display
-        fko.clock(localtime().tm_hour,localtime().tm_min,localtime().tm_sec)
+    fko.clock(localtime().tm_hour,localtime().tm_min,localtime().tm_sec) #show timestamp on display
     m_act=localtime().tm_mon   #take actual month as number
     if m_act == m_spring :
         season=1
@@ -41,7 +40,8 @@ while True:
             print('Error:',str(e))
             errors=errors+1
         temperature = (float(tempsensordata[2:]))/1000
-        lcd.lcd_display_string(str(errors),1,18)
+        if usage_display == 1 :
+            lcd.lcd_display_string(str(errors),1,18)
     else:
         temperature = 999
     if aq_debug == 1 :
