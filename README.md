@@ -9,3 +9,4 @@ This repository will get periodic updates and new features related to control te
 * Permanently logging of temperatures.
 ## Next fixes
 * Extend temperature control on nightly drop (currently one set point for whole day).
+
