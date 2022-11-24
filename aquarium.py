@@ -39,9 +39,9 @@ while True:
         except Exception as e:
             print('Error:',str(e))
             errors=errors+1
-        temperature = (float(tempsensordata[2:]))/1000
-        if usage_display == 1 :
-            lcd.lcd_display_string(str(errors),1,18)
+			if usage_display == 1 :
+				lcd.lcd_display_string(str(errors),1,18)
+        temperature = (float(tempsensordata[2:]))/1000        
     else:
         temperature = 999
     if aq_debug == 1 :
@@ -59,13 +59,15 @@ while True:
     if temperature < mintemp or localtime().tm_hour == minmaxresettime and localtime().tm_min == 0 :
         mintemp = temperature
         fko.sectime(localtime().tm_hour,localtime().tm_min,9)
+		if usage_display == 1 :
+			lcd.lcd_display_string('  {0:0.1f}'.format(mintemp), 3,8)
     if temperature > maxtemp or localtime().tm_hour == minmaxresettime and localtime().tm_min == 0:
         maxtemp = temperature
         fko.sectime(localtime().tm_hour,localtime().tm_min,15)
+		if usage_display == 1 :
+			lcd.lcd_display_string('  {0:0.1f}'.format(maxtemp), 3,14)
     if aq_debug == 1 :
         print("Min/Max temperature =",mintemp,"/",maxtemp,"°C")
-    if usage_display == 1 :
-        lcd.lcd_display_string('  {0:0.1f}'.format(mintemp) +'  {0:0.1f}'.format(maxtemp), 3,8)
     
     ########### slow loop ###########
     if cycleslow_counter >= cyclegain_slow :

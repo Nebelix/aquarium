@@ -33,6 +33,7 @@ if usage_display == 1 :
     lcd = lcddriver.lcd()
     lcd.lcd_clear()
     lcd.lcd_display_string("       aquarium"+str(aq_version), 1)
+    lcd.lcd_display_string(str(errors),1,18)
     fkochars = [
             # heart
             [0x00,0x00,0x1B,0x1F,0x1F,0x0E,0x04,0x00],
